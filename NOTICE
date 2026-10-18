@@ -1,0 +1,238 @@
+Inkmaru
+Copyright (c) 2026 morisy2
+
+（公開リポジトリ inkmaru-web について）このリポジトリはブラウザ配布物のソースだけを
+含む。以下で [サーバ（Lambda）のみ] と付記した項目は、公開していないシグナリング
+サーバの依存であり、このリポジトリのコードからはビルドされない。
+
+このファイルは Inkmaru に組み込まれている、または同梱されているサードパーティ製
+ソフトウェアとフォントデータの帰属表示をまとめたものである。各ライセンスの完全な
+テキストは `LICENSE-THIRD-PARTY` に記載されている。本ファイルはどのコンポーネント
+がどのライセンスの対象であるかの索引として機能する。
+
+--------------------------------------------------------------------------------
+配布物の境界について（重要）
+--------------------------------------------------------------------------------
+
+Inkmaru には依存関係が異なる2つの配布物がある。
+
+  1. ブラウザ配布物 — `web/game.wasm`（および任意のネイティブデスクトップビルド）。
+     ゲーム本体そのもの。プレイヤーが実際にダウンロードして実行するのはこれ。
+  2. サーバ配布物 — シグナリングサーバの AWS Lambda 関数一式
+     （`cmd/signaling`、`internal/signaling/...` からビルドされるバイナリ）。
+     WebRTC のシグナリング（部屋の作成・SDP/ICE candidate の中継）のみを行い、
+     ゲームのロジックは一切含まない。
+
+以下、各コンポーネントの帰属表示には配布物区分（[ブラウザ] / [サーバ] /
+[build/test専用]）を付記する。**サーバ配布物が持ち込む依存（AWS SDK 系一式）は
+ブラウザ配布物には一切含まれない。** 逆にブラウザ配布物の依存（Ebitengine や
+埋め込みフォントデータなど）はサーバ配布物には含まれない。
+
+第2段階（2b）でオンライン対戦の画面が入り、ブラウザ配布物の依存が増えた。
+`cmd/game` → `internal/gfx` → `internal/netwire` → `internal/rtc`・
+`internal/sigclient` の経路で、pion の WebRTC 一式と
+`github.com/coder/websocket` が `web/game.wasm` に含まれるようになった。
+`github.com/coder/websocket` はそれまで統合テスト（`infra/integration_test.go`、
+`//go:build integration`）専用だったが、この段階からブラウザ配布物の依存である。
+これらはサーバ配布物（Lambda）には含まれない。
+
+`github.com/ebitengine/gomobile` は `go.mod` に indirect として載っているが、
+**どちらの配布物にも入らない。** Ebitengine の Android バックエンド専用であり、
+本プロジェクトは Android 版を作らないので帰属の義務は生じない。`purego` や `xgb` を
+「ネイティブデスクトップビルドのみ」として載せている以上、これも「調べたうえで
+帰属を載せていない」ことを明示しておく。実測（2026-09-08）は次のとおり。
+
+  - `go list -deps ./cmd/game` に gomobile が現れるのは
+    `CGO_ENABLED=1 GOOS=android GOARCH=arm64` のときだけで、10パッケージが入る。
+  - `GOOS=js GOARCH=wasm`（ブラウザ配布物）・`GOOS=linux GOARCH=amd64`・
+    `GOOS=darwin GOARCH=arm64`（ネイティブデスクトップ）では、CGO の有無に
+    かかわらず0件である。`go mod why` も
+    "main module does not need package github.com/ebitengine/gomobile" と答える。
+  - 注意: `CGO_ENABLED=0 GOOS=android` の `go list` は `ebiten/v2/internal/vibrate`
+    のビルド制約で**エラーになり、一覧が不完全なまま終わる**（終了コード 1）。
+    その出力を根拠に「Android にも入らない」と読んではならない。
+  - LICENSE は BSD 3-Clause で、`golang.org/x/image` の LICENSE と**バイト単位で
+    同一**である（`diff` の出力が空。本文は `LICENSE-THIRD-PARTY` に既にある）。
+
+2026-10-10、画面の文字を M PLUS Rounded 1c（下記）に替えたことで、
+`github.com/hajimehoshi/bitmapfont/v4` と、それが使う
+`github.com/pierrec/lz4/v4` が**どちらの配布物からも抜けた。** 帰属表示と
+ライセンス全文（bitmapfont が同梱していた7つのビットマップフォント——
+Ark Pixel Font・Cubic 11・Galmuri・Eternal Dream Arabization・Baekmuk Gulim・
+M+ Bitmap Font・misc-fixed——を含む）も、したがってこのファイルと
+`LICENSE-THIRD-PARTY` から削除した。実測（2026-10-10）は次のとおり。
+
+  - `GOOS=js GOARCH=wasm go list -deps ./cmd/game`（ブラウザ配布物）、
+    `go list -deps ./cmd/game`（ネイティブ）、`go list -deps ./cmd/signaling`
+    （サーバ配布物）のいずれにも bitmapfont と lz4 は現れない。
+  - `go.mod` には indirect として残るが、`go mod why` が示す経路は
+    `ebiten/v2/text/v2.test`——Ebitengine 自身のテストバイナリ——であり、
+    本プロジェクトのどの配布物にも入らない。
+
+================================================================================
+Apache License 2.0
+================================================================================
+
+This product includes software developed by the Ebitengine project
+(https://github.com/hajimehoshi/ebiten), licensed under the Apache License 2.0.
+[ブラウザ配布物（web/game.wasm）およびネイティブデスクトップビルド]
+
+This product includes the following Apache License 2.0 libraries:
+  - github.com/ebitengine/purego (https://github.com/ebitengine/purego)
+    [ネイティブデスクトップビルドのみ。`GOOS=js GOARCH=wasm go list -deps ./cmd/game`
+    で確認したところ web/game.wasm には含まれない]
+  - github.com/ebitengine/hideconsole (https://github.com/ebitengine/hideconsole)
+    [ブラウザ配布物（web/game.wasm）およびネイティブデスクトップビルド]
+
+This product includes the following Apache License 2.0 libraries, used by the
+signaling server (AWS Lambda) only — NOT present in web/game.wasm:
+  - github.com/aws/aws-lambda-go (https://github.com/aws/aws-lambda-go) —
+    Lambda ランタイム。[サーバ（Lambda）のみ]
+    Note: このモジュールは全体としては Apache-2.0 だが、`cmd/` 配下のサンプル
+    ビルドツールなど本プロジェクトが import しない一部のコードは
+    "MIT No Attribution" (`LICENSE-LAMBDACODE`) の対象。本プロジェクトが実際に
+    import している `events` / `lambda` / `lambda/handlertrace` /
+    `lambda/messages` / `lambdacontext` は Apache-2.0 の `LICENSE` の対象のみ。
+  - github.com/aws/aws-sdk-go-v2 (https://github.com/aws/aws-sdk-go-v2) —
+    AWS SDK for Go v2 本体。[サーバ（Lambda）のみ]
+  - github.com/aws/aws-sdk-go-v2/config,
+    github.com/aws/aws-sdk-go-v2/credentials,
+    github.com/aws/aws-sdk-go-v2/feature/ec2/imds,
+    github.com/aws/aws-sdk-go-v2/internal/configsources,
+    github.com/aws/aws-sdk-go-v2/internal/endpoints/v2,
+    github.com/aws/aws-sdk-go-v2/internal/v4a,
+    github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi,
+    github.com/aws/aws-sdk-go-v2/service/dynamodb,
+    github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding,
+    github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery,
+    github.com/aws/aws-sdk-go-v2/service/internal/presigned-url,
+    github.com/aws/aws-sdk-go-v2/service/signin,
+    github.com/aws/aws-sdk-go-v2/service/sso,
+    github.com/aws/aws-sdk-go-v2/service/ssooidc,
+    github.com/aws/aws-sdk-go-v2/service/sts
+    （aws-sdk-go-v2 のサブモジュール群。認証情報の解決、DynamoDB、
+    API Gateway Management API への呼び出しに使用）[サーバ（Lambda）のみ]
+    Note: 上記すべてのサブモジュールの LICENSE.txt は aws-sdk-go-v2 本体の
+    LICENSE.txt とバイト単位で同一であることを diff で確認済み。
+  - github.com/aws/smithy-go (https://github.com/aws/smithy-go) —
+    AWS SDK for Go v2 の共通ランタイム（トランスポート／ミドルウェア）。
+    [サーバ（Lambda）のみ]
+
+================================================================================
+BSD-3-Clause
+================================================================================
+
+This product includes the following BSD-3-Clause licensed libraries
+（すべてブラウザ配布物 `web/game.wasm` の依存。サーバ配布物には含まれない）:
+  - golang.org/x/image (https://golang.org/x/image) [ブラウザ配布物]
+  - golang.org/x/sync (https://golang.org/x/sync) [ブラウザ配布物]
+  - golang.org/x/sys (https://golang.org/x/sys) — ネイティブデスクトップビルドのみ
+    [ネイティブデスクトップビルドのみ。web/game.wasm には含まれない]
+  - golang.org/x/text (https://golang.org/x/text) [ブラウザ配布物]
+  - github.com/jezek/xgb (https://github.com/jezek/xgb) — ネイティブデスクトップ
+    ビルド（Linux/X11 バックエンド）でのみリンクされる。
+    [ネイティブデスクトップビルドのみ。web/game.wasm には含まれない]
+  - github.com/go-text/typesetting (https://github.com/go-text/typesetting) —
+    デュアルライセンス（BSD-3-Clause OR Unlicense）。本製品は BSD-3-Clause の
+    条件で利用する。[ブラウザ配布物]
+  - golang.org/x/crypto (https://golang.org/x/crypto) — pion 経由。
+    第2段階(2b)から。[ブラウザ配布物]
+  - golang.org/x/net (https://golang.org/x/net) — pion および
+    coder/websocket 経由。第2段階(2b)から。[ブラウザ配布物]
+  - golang.org/x/time (https://golang.org/x/time) — pion 経由。
+    第2段階(2b)から。[ブラウザ配布物]
+  - github.com/google/uuid (https://github.com/google/uuid) — pion/webrtc 経由。
+    第2段階(2b)から。[ブラウザ配布物]
+    Copyright (c) 2009,2014 Google Inc. All rights reserved.
+  - github.com/wlynxg/anet (https://github.com/wlynxg/anet) — pion/transport 経由。
+    第2段階(2b)から。[ブラウザ配布物]
+    Copyright (c) 2023, wlynxg
+
+Copyright (c) 2009 The Go Authors. All rights reserved.
+Copyright (c) 2009 The XGB Authors. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the conditions of the BSD-3-Clause
+license (as published by each project above) are met.
+
+================================================================================
+MIT License
+================================================================================
+
+This product includes the following MIT licensed library:
+  - github.com/rivo/uniseg (https://github.com/rivo/uniseg) [ブラウザ配布物]
+    Copyright (c) 2019 Oliver Kuederle
+
+This product includes the pion WebRTC stack, licensed under the MIT License.
+オンライン対戦の P2P 接続に使用する（`internal/rtc`）。第2段階(2b)から
+ブラウザ配布物に含まれる。srtp/v3 だけはネイティブデスクトップビルドにしか
+リンクされない（下記）。[srtp/v3 を除きブラウザ配布物（web/game.wasm）]
+  - github.com/pion/webrtc/v4 (https://github.com/pion/webrtc)
+  - github.com/pion/datachannel
+  - github.com/pion/dtls/v3
+  - github.com/pion/ice/v4
+  - github.com/pion/interceptor
+  - github.com/pion/logging
+  - github.com/pion/mdns/v2
+  - github.com/pion/randutil
+  - github.com/pion/rtcp
+  - github.com/pion/rtp
+  - github.com/pion/sctp
+  - github.com/pion/sdp/v3
+  - github.com/pion/stun/v4
+  - github.com/pion/transport/v4
+  - github.com/pion/turn/v5
+    Copyright (c) 2026 The Pion community <https://pion.ly>
+
+以下の pion のモジュールは LICENSE が上記と**バイト単位では一致しない**ため、
+`LICENSE-THIRD-PARTY` に個別の節を設けて本文を逐語で載せてある。
+  - github.com/pion/logging — 著作権表示の年が異なる（本文は同一）
+    Copyright (c) 2023 The Pion community <https://pion.ly>
+  - github.com/pion/rtp — MIT のひな形の
+    "Copyright (c) <year> <copyright holders>" が埋められないまま配布されている。
+    補わずに、見つかったとおり記載してある
+  - github.com/pion/mdns/v2 — 著作権表示に加えて**改行位置**も異なる（80桁で
+    折り返された版。語句は同一）
+    Copyright (c) 2018
+  - github.com/pion/randutil — 同上（80桁で折り返された版）
+    Copyright (c) 2020 Pion
+
+  - github.com/pion/srtp/v3 (https://github.com/pion/srtp) — pion/webrtc 経由。
+    **ネイティブデスクトップビルドにのみリンクされる。**
+    `web/game.wasm`（GOOS=js）にも Lambda にも含まれない（`go list -deps` で確認）。
+    LICENSE は pion/webrtc のものとバイト単位で同一。
+    [ネイティブデスクトップビルドのみ]
+
+================================================================================
+ISC License
+================================================================================
+
+This product includes the following ISC licensed library:
+  - github.com/coder/websocket (https://github.com/coder/websocket)
+    Copyright (c) 2025 Coder
+    [ブラウザ配布物（web/game.wasm）。第2段階(2b)から、`internal/sigclient` が
+    シグナリングサーバとの WebSocket に使用する。統合テスト
+    （`infra/integration_test.go`、`//go:build integration`）でも使う。
+    サーバ配布物（Lambda）には含まれない。]
+
+================================================================================
+画面のフォント: M PLUS Rounded 1c — SIL Open Font License 1.1 (OFL-1.1)
+================================================================================
+
+ゲームの文字を描いているフォント。[ブラウザ配布物（web/game.wasm）および
+ネイティブデスクトップビルド]
+
+Upstream: https://github.com/coz-m/MPLUS_FONTS
+配布元: Google Fonts（google/fonts の ofl/mplusrounded1c）
+Copyright 2016 The Rounded M+ Project Authors.
+This Font Software is licensed under the SIL Open Font License, Version 1.1.
+ライセンス全文は `LICENSE-THIRD-PARTY` の SIL Open Font License, Version 1.1 の節。
+
+**同梱しているのは原本ではなく、絞り込んだ派生物である。** 原本
+（MPLUSRounded1c-Medium.ttf）は 3,432,624 バイトあるが、このゲームが表示する
+文字だけに絞って `internal/assets/mplus-rounded-1c-medium-subset.ttf`
+（約 83,000 バイト）として焼き込んでいる。絞り込みの手順は
+`scripts/subset-font.sh` にあり、著作権表示・ライセンス表示を含む name
+テーブルは原本のまま残してある。OFL-1.1 は派生物の配布を認めており、この
+フォントは Reserved Font Name を宣言していない（根拠は `LICENSE-THIRD-PARTY`
+の当該節に記載）。

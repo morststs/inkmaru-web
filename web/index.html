@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<!-- スマートフォンでピンチズームやページのスクロールが起きないようにする -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Inkmaru</title>
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: #1C1F26; overflow: hidden; }
+  /* 2本指操作時の拡大・スクロールを止める */
+  body { touch-action: none; overscroll-behavior: none; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<!-- 配信しているのはコンパイル済みの game.wasm で、その中に他者のコード（MIT・BSD・
+     Apache-2.0・SIL OFL など）が含まれる。これらは複製物に著作権表示とライセンス本文を
+     添えることを条件にしているので、遊ぶ人から到達できる場所に置く必要がある。
+     リポジトリは非公開なので、この導線が唯一の帰属表示の経路である。消さないこと。 -->
+<a id="licenses" href="licenses.html">ライセンス</a>
+<style>
+  /* **読める大きさと明るさで出すこと。** 初版は 11px・#6F7683 で隅に置いたが、
+     暗い背景に埋もれて利用者が見つけられなかった。帰属表示への唯一の導線なので、
+     見つからないなら置いていないのと同じである。
+     top/right に env(safe-area-inset-*) を噛ませるのは、viewport-fit=cover を
+     指定しているため。スマートフォンでは切り欠きや時計の裏に潜り込む。 */
+  #licenses { position: fixed; z-index: 10;
+              top: calc(8px + env(safe-area-inset-top));
+              right: calc(10px + env(safe-area-inset-right));
+              font: 12px/1 "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
+              color: #C8CDD6; text-decoration: none;
+              padding: 8px 12px; border-radius: 999px;
+              background: rgba(255,255,255,0.10);
+              border: 1px solid rgba(255,255,255,0.20); }
+  #licenses:active { color: #FFFFFF; background: rgba(255,255,255,0.22); }
+</style>
+<script src="wasm_exec.js"></script>
+<script>
+const go = new Go();
+WebAssembly.instantiateStreaming(fetch("game.wasm"), go.importObject).then(result => {
+  go.run(result.instance);
+}).catch(err => {
+  // game.wasm の取得や起動に失敗した場合、何も表示しない黒い画面のまま
+  // 固まって見えるのを避けるため、エラーをコンソールに出しつつ画面にも表示する。
+  console.error("game.wasm の読み込みに失敗しました:", err);
+  const box = document.createElement("div");
+  box.style.cssText = "color:#F2F2F2;font-family:sans-serif;padding:24px;line-height:1.6;";
+  box.textContent = "読み込みに失敗しました。通信状況を確認し、ページを再読み込みしてください。";
+  document.body.appendChild(box);
+});
+</script>
+</body>
+</html>

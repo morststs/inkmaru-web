@@ -1,0 +1,22 @@
+tmp/
+
+# Go build artefacts
+/dist/
+*.wasm
+*.test
+*.out
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+
+# WASM build output
+web/game.wasm
+web/wasm_exec.js
+
+# Lambda のビルド成果物
+/build/
+
+# スクリーンショットの出力先
+/shots/
