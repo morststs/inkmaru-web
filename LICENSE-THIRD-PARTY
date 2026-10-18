@@ -269,6 +269,15 @@ licence-fix-report.md for the diff commands):
   - golang.org/x/sys (native desktop builds only; not linked into web/game.wasm)
   - golang.org/x/text
   - golang.org/x/time (linked into web/game.wasm via pion; added in phase 2b)
+  - Code from the Go project (The Go Authors) that is linked into or shipped
+    with web/game.wasm: the Go standard library and runtime; web/wasm_exec.js
+    (Copyright 2018); and files that other modules copied from Go and mark as
+    BSD-3-Clause per file — github.com/pion/stun/v4 internal/hmac/hmac.go
+    (Copyright 2009), github.com/pion/transport/v4 utils/xor/xor_generic.go
+    (Copyright 2013) and github.com/hajimehoshi/ebiten/v2
+    internal/png/stdlib*.go (Copyright 2009, 2012). Their terms are the Go
+    project's LICENSE; golang/go@go1.26.0 LICENSE was diffed against the text
+    below (empty output, 2026-10-18).
 Verified byte-identical to the text below with
 `diff $(go env GOMODCACHE)/golang.org/x/image@v0.45.0/LICENSE <each>` (empty output).
 

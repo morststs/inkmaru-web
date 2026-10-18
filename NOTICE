@@ -147,8 +147,28 @@ This product includes the following BSD-3-Clause licensed libraries
   - github.com/wlynxg/anet (https://github.com/wlynxg/anet) — pion/transport 経由。
     第2段階(2b)から。[ブラウザ配布物]
     Copyright (c) 2023, wlynxg
+  - Go 本体（The Go Authors）由来のコード。どれも web/game.wasm に入る
+    （配布物に入ることは `GOOS=js GOARCH=wasm go list -deps` の GoFiles で確認、
+    2026-10-18）。[ブラウザ配布物]
+      Go の標準ライブラリとランタイム（Go でビルドしたバイナリには必ず入る）
+      web/wasm_exec.js（Go 付属の WASM 起動用スクリプト。配信物に同梱する）
+        Copyright (c) 2018 The Go Authors. All rights reserved.
+      github.com/pion/stun/v4 internal/hmac/hmac.go
+        Copyright (c) 2009 The Go Authors. All rights reserved.
+      github.com/pion/transport/v4 utils/xor/xor_generic.go
+        Copyright (c) 2013 The Go Authors. All rights reserved.
+      github.com/hajimehoshi/ebiten/v2 internal/png/stdlib*.go
+        Copyright (c) 2009, 2012 The Go Authors. All rights reserved.
+    pion（MIT）と Ebitengine（Apache-2.0）の中のこれらのファイルは、モジュール
+    全体のライセンスではなく、各ファイルの表記（SPDX または冒頭の著作権表示）で
+    BSD-3-Clause とされている。条項は Go 本体の LICENSE（golang/go の go1.26.0）で、
+    これは `LICENSE-THIRD-PARTY` の golang.org/x/* の本文とバイト単位で同一である
+    （`diff` の出力が空。2026-10-18）。
 
 Copyright (c) 2009 The Go Authors. All rights reserved.
+Copyright (c) 2012 The Go Authors. All rights reserved.
+Copyright (c) 2013 The Go Authors. All rights reserved.
+Copyright (c) 2018 The Go Authors. All rights reserved.
 Copyright (c) 2009 The XGB Authors. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
